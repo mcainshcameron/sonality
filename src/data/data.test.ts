@@ -9,6 +9,7 @@ import {
   deleteObservation,
   listObservationsByPerson,
 } from './observations.repo'
+import { addEvidence, removeEvidence, listEvidenceForObservation } from './evidence.repo'
 
 beforeEach(async () => {
   await db.delete()
@@ -227,5 +228,79 @@ describe('TC-R-06 — delete observation cascades to evidence only', () => {
     expect(await db.evidence.where('observationId').equals(obs.id).count()).toBe(0)
     expect(await getPerson(p.id)).toBeDefined()
     void now // suppress unused warning
+  })
+})
+
+// T-09 evidence repository tests
+describe('T-09 — evidence persistence', () => {
+  it('adds Big Five evidence and reads it back', async () => {
+    const p = await createPerson({ name: 'Test' })
+    const obs = await createObservation({ personId: p.id, text: 'note', occurredOn: '2026-06-21' })
+
+    const ev = await addEvidence({
+      observationId: obs.id,
+      framework: 'BIG_FIVE',
+      dimension: 'O',
+      direction: 1,
+      weight: 2,
+    })
+    expect(ev.framework).toBe('BIG_FIVE')
+    expect(ev.dimension).toBe('O')
+
+    const list = await listEvidenceForObservation(obs.id)
+    expect(list).toHaveLength(1)
+    expect(list[0].id).toBe(ev.id)
+  })
+
+  it('adds MBTI evidence with valid pole, reads it back', async () => {
+    const p = await createPerson({ name: 'Test2' })
+    const obs = await createObservation({ personId: p.id, text: 'note', occurredOn: '2026-06-21' })
+
+    const ev = await addEvidence({
+      observationId: obs.id,
+      framework: 'MBTI',
+      axis: 'TF',
+      pole: 'T',
+      weight: 3,
+    })
+    expect(ev.axis).toBe('TF')
+    expect(ev.pole).toBe('T')
+  })
+
+  it('rejects MBTI evidence with invalid pole for axis', async () => {
+    const p = await createPerson({ name: 'Test3' })
+    const obs = await createObservation({ personId: p.id, text: 'note', occurredOn: '2026-06-21' })
+
+    await expect(
+      addEvidence({
+        observationId: obs.id,
+        framework: 'MBTI',
+        axis: 'EI',
+        pole: 'T', // T is not a valid pole for EI
+        weight: 1,
+      }),
+    ).rejects.toThrow()
+  })
+
+  it('removes a single evidence item without affecting others', async () => {
+    const p = await createPerson({ name: 'Test4' })
+    const obs = await createObservation({ personId: p.id, text: 'note', occurredOn: '2026-06-21' })
+
+    const ev1 = await addEvidence({ observationId: obs.id, framework: 'BIG_FIVE', dimension: 'O', direction: 1, weight: 1 })
+    const ev2 = await addEvidence({ observationId: obs.id, framework: 'BIG_FIVE', dimension: 'C', direction: -1, weight: 2 })
+
+    await removeEvidence(ev1.id)
+
+    const list = await listEvidenceForObservation(obs.id)
+    expect(list).toHaveLength(1)
+    expect(list[0].id).toBe(ev2.id)
+  })
+
+  it('an observation with zero evidence items is valid', async () => {
+    const p = await createPerson({ name: 'Test5' })
+    const obs = await createObservation({ personId: p.id, text: 'pure note', occurredOn: '2026-06-21' })
+
+    const list = await listEvidenceForObservation(obs.id)
+    expect(list).toHaveLength(0)
   })
 })
