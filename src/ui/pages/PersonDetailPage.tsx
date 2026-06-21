@@ -20,6 +20,7 @@ import EvidencePicker from '../components/EvidencePicker'
 import ConfirmDialog from '../components/ConfirmDialog'
 import BigFiveChart from '../components/BigFiveChart'
 import MbtiTypeView from '../components/MbtiTypeView'
+import EvidenceBreakdown from '../components/EvidenceBreakdown'
 
 type Modal =
   | { type: 'add' }
@@ -132,6 +133,12 @@ export default function PersonDetailPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <MbtiTypeView mbti={profile.mbti} />
           </div>
+        </div>
+      )}
+
+      {observations.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-8">
+          <EvidenceBreakdown observations={observations} evidence={evidence} />
         </div>
       )}
 
