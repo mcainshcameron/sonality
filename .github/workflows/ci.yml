@@ -18,8 +18,9 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm test
+      - run: npm run coverage
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium firefox
       - run: npm run e2e
         env:
           CI: true

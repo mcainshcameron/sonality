@@ -98,3 +98,4 @@ product fork (adds a backend + auth). Proceeding local-first until told otherwis
 |---|---|---|
 | 2026-06-21 | Initial decisions D-01…D-09 and assumptions A-01…A-09 recorded; document suite created | Implementation-prep loop, round 1 |
 | 2026-06-21 | Two independent reviewers ran; both flagged import-merge semantics as the #1 gap. Added D-10…D-14; fully specified merge (`02 §10`) + canonical labels (`02 §11`); clarified confidence edge case, `occurredOn`, archive↔counts, memoization; added FR-25 and tests TC-P-11/12, TC-R-10/11, TC-U-07/08 | Implementation-prep loop, round 2 |
+| 2026-06-21 | v1 implemented T-01…T-16. All MUST + SHOULD requirements built; 84 unit/component tests + 26 e2e tests (Chromium + Firefox) green; domain coverage 100% lines (gate ≥95%); a11y (axe) and perf (A-06 scale) verified. No decisions changed during build — implementation matched the spec as written | Implementation loop |

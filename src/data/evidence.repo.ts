@@ -10,6 +10,11 @@ export async function addEvidence(
     ...data,
   }
   EvidenceSchema.parse(evidence)
+  // Referential integrity (§4, NFR-06): reject evidence for a missing observation.
+  const parent = await db.observations.get(evidence.observationId)
+  if (!parent) {
+    throw new Error(`Evidence references missing observation ${evidence.observationId}`)
+  }
   await db.evidence.add(evidence)
   return evidence
 }

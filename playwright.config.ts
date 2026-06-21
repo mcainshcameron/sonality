@@ -12,6 +12,8 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // TC-N-06 — cross-browser coverage (Chromium + Firefox).
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
   ],
   webServer: {
     command: process.env['CI'] ? 'npm run preview' : 'npm run dev',

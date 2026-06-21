@@ -303,4 +303,17 @@ describe('T-09 — evidence persistence', () => {
     const list = await listEvidenceForObservation(obs.id)
     expect(list).toHaveLength(0)
   })
+
+  // TC-D-08 — evidence referencing a non-existent observation is rejected at write
+  it('TC-D-08 — rejects evidence whose observationId does not exist', async () => {
+    await expect(
+      addEvidence({
+        observationId: '00000000-0000-0000-0000-0000000000aa',
+        framework: 'BIG_FIVE',
+        dimension: 'O',
+        direction: 1,
+        weight: 2,
+      }),
+    ).rejects.toThrow()
+  })
 })

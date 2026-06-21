@@ -118,8 +118,11 @@ export default function EvidencePicker({
         {framework === 'BIG_FIVE' ? (
           <div className="space-y-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Dimension</label>
+              <label htmlFor="ep-dimension" className="block text-xs text-gray-600 mb-1">
+                Dimension
+              </label>
               <select
+                id="ep-dimension"
                 value={dimension}
                 onChange={(e) => setDimension(e.target.value as BigFiveDimension)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
@@ -132,8 +135,11 @@ export default function EvidencePicker({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Direction</label>
+              <label htmlFor="ep-direction" className="block text-xs text-gray-600 mb-1">
+                Direction
+              </label>
               <select
+                id="ep-direction"
                 value={direction}
                 onChange={(e) => setDirection(Number(e.target.value) as Direction)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
@@ -146,8 +152,11 @@ export default function EvidencePicker({
         ) : (
           <div className="space-y-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Axis</label>
+              <label htmlFor="ep-axis" className="block text-xs text-gray-600 mb-1">
+                Axis
+              </label>
               <select
+                id="ep-axis"
                 value={axis}
                 onChange={(e) => handleAxisChange(e.target.value as MbtiAxis)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
@@ -160,8 +169,11 @@ export default function EvidencePicker({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Pole</label>
+              <label htmlFor="ep-pole" className="block text-xs text-gray-600 mb-1">
+                Pole
+              </label>
               <select
+                id="ep-pole"
                 value={pole}
                 onChange={(e) => setPole(e.target.value as MbtiPole)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"
@@ -177,8 +189,11 @@ export default function EvidencePicker({
         )}
 
         <div className="mt-2">
-          <label className="block text-xs text-gray-600 mb-1">Weight</label>
+          <label htmlFor="ep-weight" className="block text-xs text-gray-600 mb-1">
+            Weight
+          </label>
           <select
+            id="ep-weight"
             value={weight}
             onChange={(e) => setWeight(Number(e.target.value) as Weight)}
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm"

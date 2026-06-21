@@ -77,3 +77,22 @@
 | Big Five chart = bars (D-11, was TQ-01) | `02 §9` | **Resolved** |
 | Import merge algorithm (was TQ-02) | `02 §10` | **Resolved** — upsert by id, fully specified + tested |
 | FR-05/14/15/21/24/25 are SHOULD | this matrix | Covered by tests but droppable from v1 without breaking any MUST |
+
+## 6. Definition of Done verification (T-16, 2026-06-21)
+
+All DoD boxes (`03-tasks.md §4`) verified:
+
+| Gate | Status | Evidence |
+|---|---|---|
+| Scope — every MUST built | ✅ | FR-01..04, 06..13, 16..20, 22..23 + all SHOULD implemented |
+| Traceability — no empty rows | ✅ | every FR/NFR maps to ≥1 task and ≥1 passing test (this doc) |
+| Domain correctness | ✅ | TC-D-01..08, TC-P-01..12 pass; domain line coverage **100%** (gate ≥95%) |
+| Determinism | ✅ | TC-P-09, TC-P-10 |
+| Integrity (cascade + orphan) | ✅ | TC-R-02, TC-R-06, TC-D-08 |
+| Persistence / offline | ✅ | TC-R-01 round-trip; TC-N-02 offline e2e |
+| Portability | ✅ | TC-R-07 lossless round-trip; TC-R-08/11 reject corrupt/dangling |
+| Accessibility | ✅ | TC-N-04 axe (no critical) + keyboard-only flow; table/text alternatives |
+| Performance | ✅ | TC-N-03 at A-06 scale (500 / 10k); compute well under budget |
+| Privacy | ✅ | TC-N-01 — no third-party requests during core flow |
+| Quality gates | ✅ | lint, type-check, 84 unit/component, 26 e2e (Chromium + Firefox) green |
+| Docs current | ✅ | no decisions changed during build; change log updated (`00 §7`) |
