@@ -21,3 +21,10 @@ export async function removeEvidence(id: string): Promise<void> {
 export async function listEvidenceForObservation(observationId: string): Promise<Evidence[]> {
   return db.evidence.where('observationId').equals(observationId).toArray()
 }
+
+/** All evidence across every observation belonging to one person (for profile compute). */
+export async function listEvidenceForPerson(personId: string): Promise<Evidence[]> {
+  const obsIds = await db.observations.where('personId').equals(personId).primaryKeys()
+  if (obsIds.length === 0) return []
+  return db.evidence.where('observationId').anyOf(obsIds as string[]).toArray()
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { getPerson } from '../../data/people.repo'
@@ -8,9 +8,18 @@ import {
   updateObservation,
   deleteObservation,
 } from '../../data/observations.repo'
-import type { Observation } from '../../domain/types'
+import {
+  addEvidence,
+  removeEvidence,
+  listEvidenceForPerson,
+} from '../../data/evidence.repo'
+import { computeProfile } from '../../domain/profile'
+import type { Observation, Evidence } from '../../domain/types'
 import ObservationEditor from '../components/ObservationEditor'
+import EvidencePicker from '../components/EvidencePicker'
 import ConfirmDialog from '../components/ConfirmDialog'
+import BigFiveChart from '../components/BigFiveChart'
+import MbtiTypeView from '../components/MbtiTypeView'
 
 type Modal =
   | { type: 'add' }
@@ -21,8 +30,8 @@ type Modal =
 export default function PersonDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [modal, setModal] = useState<Modal>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
-  // null = not found; undefined = still loading
   const person = useLiveQuery(
     async () => {
       if (!id) return null
@@ -35,6 +44,27 @@ export default function PersonDetailPage() {
     () => (id ? listObservationsByPerson(id) : Promise.resolve([])),
     [id],
   )
+
+  const evidence = useLiveQuery(
+    () => (id ? listEvidenceForPerson(id) : Promise.resolve([])),
+    [id],
+  )
+
+  // Profile is recomputed only when this person's evidence changes (NFR-04/05).
+  const profile = useMemo(() => {
+    if (!id) return null
+    return computeProfile(id, evidence ?? [])
+  }, [id, evidence])
+
+  const evidenceByObs = useMemo(() => {
+    const map = new Map<string, Evidence[]>()
+    for (const e of evidence ?? []) {
+      const list = map.get(e.observationId) ?? []
+      list.push(e)
+      map.set(e.observationId, list)
+    }
+    return map
+  }, [evidence])
 
   async function handleAdd(data: { text: string; occurredOn: string }) {
     await createObservation({ personId: id!, ...data })
@@ -53,13 +83,22 @@ export default function PersonDetailPage() {
     setModal(null)
   }
 
-  if (person === undefined || observations === undefined) {
+  function toggleExpanded(obsId: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(obsId)) next.delete(obsId)
+      else next.add(obsId)
+      return next
+    })
+  }
+
+  if (person === undefined || observations === undefined || evidence === undefined) {
     return <p className="text-gray-400 text-sm p-6">Loading…</p>
   }
 
   if (person === null) {
     return (
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <Link to="/" className="text-sm text-blue-600 hover:underline">
           ← People
         </Link>
@@ -69,7 +108,7 @@ export default function PersonDetailPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto">
       <Link to="/" className="text-sm text-blue-600 hover:underline">
         ← People
       </Link>
@@ -83,6 +122,18 @@ export default function PersonDetailPage() {
           <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{person.notes}</p>
         )}
       </div>
+
+      {/* Profile section (T-10 + T-11) */}
+      {profile && (
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <BigFiveChart bigFive={profile.bigFive} />
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <MbtiTypeView mbti={profile.mbti} />
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">
@@ -98,38 +149,64 @@ export default function PersonDetailPage() {
       </div>
 
       {observations.length === 0 ? (
-        <p className="text-gray-500 text-sm">No observations yet. Add one to start building a profile.</p>
+        <p className="text-gray-500 text-sm">
+          No observations yet. Add one to start building a profile.
+        </p>
       ) : (
         <ul className="space-y-3">
-          {observations.map((obs) => (
-            <li key={obs.id} className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-start justify-between gap-4">
-                <time
-                  dateTime={obs.occurredOn}
-                  className="text-xs text-gray-400 shrink-0 mt-0.5"
-                >
-                  {obs.occurredOn}
-                </time>
-                <div className="flex gap-3 text-sm text-gray-500 shrink-0">
-                  <button
-                    onClick={() => setModal({ type: 'edit', obs })}
-                    className="hover:text-blue-600"
-                    aria-label="Edit observation"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setModal({ type: 'delete', obs })}
-                    className="hover:text-red-600"
-                    aria-label="Delete observation"
-                  >
-                    Delete
-                  </button>
+          {observations.map((obs) => {
+            const obsEvidence = evidenceByObs.get(obs.id) ?? []
+            const isOpen = expanded.has(obs.id)
+            return (
+              <li key={obs.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <time dateTime={obs.occurredOn} className="text-xs text-gray-400 shrink-0 mt-0.5">
+                    {obs.occurredOn}
+                  </time>
+                  <div className="flex gap-3 text-sm text-gray-500 shrink-0">
+                    <button
+                      onClick={() => setModal({ type: 'edit', obs })}
+                      className="hover:text-blue-600"
+                      aria-label="Edit observation"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setModal({ type: 'delete', obs })}
+                      className="hover:text-red-600"
+                      aria-label="Delete observation"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <p className="mt-2 text-sm text-gray-800 whitespace-pre-wrap">{obs.text}</p>
-            </li>
-          ))}
+                <p className="mt-2 text-sm text-gray-800 whitespace-pre-wrap">{obs.text}</p>
+
+                <button
+                  onClick={() => toggleExpanded(obs.id)}
+                  className="mt-3 text-xs text-blue-600 hover:underline"
+                  aria-expanded={isOpen}
+                >
+                  {isOpen ? 'Hide evidence' : `Evidence (${obsEvidence.length})`}
+                </button>
+
+                {isOpen && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <EvidencePicker
+                      observationId={obs.id}
+                      existing={obsEvidence}
+                      onAdd={async (data) => {
+                        await addEvidence(data)
+                      }}
+                      onRemove={async (evId) => {
+                        await removeEvidence(evId)
+                      }}
+                    />
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
 
