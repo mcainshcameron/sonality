@@ -1,0 +1,1 @@
+I love understanding peoples personality traits and categorizing and matching their behaviour to well understood traits. I want an app to help me do this.
